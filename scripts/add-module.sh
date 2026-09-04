@@ -6,9 +6,8 @@
 # Usage:
 #   ./scripts/add-module.sh <git-url> <branch> [module-name] [module-path]
 #
-# The branch is required: sync-modules.yml advances a submodule to the
-# tip of the branch recorded in .gitmodules, and one added without a
-# branch is never built again.
+# The branch is required: `git submodule update --remote` reads it to
+# find the tip to advance to.
 #
 # For a repository holding several modules, run this once for the
 # submodule and then copy the generated workflow per module, pointing
@@ -45,7 +44,7 @@ sed -e "s|__MODULE_PATH__|${MODULE_PATH}|g" -e "s|__MODULE__|${NAME}|g" \
 cat <<MSG
 
 Added ${NAME} (${MODULE_PATH}) and wrote ${WORKFLOW}.
-Add it to the matrix in release-all.yml and sync-modules.yml, then:
+Add it to the matrix in release-all.yml, then:
 
   git add -A && git commit -m "Add ${NAME}" && git push
 MSG

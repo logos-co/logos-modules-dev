@@ -15,9 +15,6 @@
 #                         Trigger release-<module>.yml. With no <module>,
 #                         list the modules this catalog publishes.
 #   release-all [--force] Trigger release-all.yml (re)release every module.
-#   sync                  Trigger sync-modules.yml — advance the submodule
-#                         pointers and release. Runs every 30 minutes on
-#                         its own; this is for when you don't want to wait.
 #   rebuild-index         Trigger rebuild-index.yml (regenerate index.json).
 #   unpublish <module> [<version>] [--dry-run] [--keep-tags]
 #                         Trigger unpublish.yml. Removes a module from the
@@ -37,7 +34,6 @@
 #   ./scripts/catalog.sh release logos-chat-module
 #   ./scripts/catalog.sh release logos-chat-module --force
 #   ./scripts/catalog.sh release-all --watch
-#   ./scripts/catalog.sh sync --watch
 #   ./scripts/catalog.sh rebuild-index
 #   ./scripts/catalog.sh unpublish logos-chat-module --dry-run
 #   ./scripts/catalog.sh unpublish logos-chat-module 1.2.3
@@ -192,10 +188,6 @@ case "$CMD" in
     else
       run_workflow "release-all.yml"
     fi
-    ;;
-
-  sync)
-    run_workflow "sync-modules.yml"
     ;;
 
   rebuild-index)

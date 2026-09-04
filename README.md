@@ -26,20 +26,30 @@ for anything that needs to keep working.
 `lez_core` is here as a dependency of `liblogos_lez_rln_module`.
 
 Four submodules, five modules — `logos-rln-modules` holds two. The
-module list is the matrix in `release-all.yml` and `sync-modules.yml`,
-not `.gitmodules`.
+module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
-## Triggering
+## Building
 
-`sync-modules.yml` runs every 30 minutes: it advances each submodule to
-its branch tip, commits the pointers, and releases. A module whose
-commit hasn't moved is skipped without building.
+Everything is triggered by hand for now. Advance the submodules and
+push:
 
-Polling means a build tracks the branch tip, not every commit — several
-commits inside one interval produce one build, of the last of them.
+```bash
+git submodule update --remote
+git commit -am "Advance submodule pointers"
+git push
+```
 
-Everything else is manual from the Actions tab: `Release all modules`,
-`Release <module>`, `Unpublish`. Or via `./scripts/catalog.sh`.
+then run **Release all modules** from the Actions tab, or:
+
+```bash
+./scripts/catalog.sh release-all --watch
+```
+
+A module whose commit hasn't moved is skipped without building, so
+re-running costs one API call per module.
+
+Automatic builds are the next iteration: each module repository
+dispatching to this one on a push to its default branch.
 
 ## Versions repeat
 
@@ -58,8 +68,7 @@ they accumulate — it re-downloads every published `.lgx` each run.
 ./scripts/add-module.sh https://github.com/logos-co/<repo> <branch>
 ```
 
-Then add its path to the matrix in `release-all.yml` and
-`sync-modules.yml`.
+Then add its path to the matrix in `release-all.yml`.
 
 ## How it differs from the release catalog
 
