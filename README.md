@@ -30,8 +30,7 @@ module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
 ## Building
 
-Everything is triggered by hand for now. Advance the submodules and
-push:
+To build by hand, advance the submodules and push:
 
 ```bash
 git submodule update --remote
@@ -48,8 +47,11 @@ then run **Release all modules** from the Actions tab, or:
 A module whose commit hasn't moved is skipped without building, so
 re-running costs one API call per module.
 
-Automatic builds are the next iteration: each module repository
-dispatching to this one on a push to its default branch.
+Builds also start on their own once a module repository is wired to
+send a `repository_dispatch` — `module-pushed.yml` receives it, advances
+that submodule and releases. See
+[`docs/notify-workflow.md`](docs/notify-workflow.md) for the sending
+half and the token it needs.
 
 ## Versions repeat
 
