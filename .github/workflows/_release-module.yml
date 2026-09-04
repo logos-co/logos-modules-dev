@@ -32,16 +32,13 @@ on:
   workflow_call:
     inputs:
       module_path:
-        description: "Path to the module submodule (e.g. submodules/<repo>)."
+        description: "Path to the module (e.g. submodules/<repo>, or a subdirectory of one)."
         type: string
         required: true
       force_build:
         description: |
-          Force build — rebuild and REPLACE the already-published
-          `<module>-v<version>` release instead of skipping it. Maps to
-          the action's `skip_if_published` (inverted): false (default) =
-          skip a version that's already fully published; true = republish
-          the same version, overwriting its assets.
+          Rebuild and REPLACE the release for the module's current
+          commit instead of skipping it.
         type: boolean
         default: false
 
@@ -52,9 +49,14 @@ permissions:
 
 jobs:
   release:
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@v1
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/tag-template
     with:
       module_path: ${{ inputs.module_path }}
+
+      # Tagging by commit rather than version turns `skip_if_published`
+      # into "skip unless this commit is new".
+      tag_template: "{name}-{short_sha}"
+      release_name_template: "{name} {version} ({short_sha})"
 
       # Normal runs skip a version that's already fully published; "Force
       # build" (force_build: true) republishes it by disabling that skip.

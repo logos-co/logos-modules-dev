@@ -1,4 +1,4 @@
-name: Release __MODULE__
+name: Release chat_module
 
 # Generated from release-module.yml.template by scripts/add-module.sh.
 
@@ -18,6 +18,6 @@ jobs:
   release:
     uses: ./.github/workflows/_release-module.yml
     with:
-      module_path: __MODULE_PATH__
+      module_path: submodules/logos-chat-module
       force_build: ${{ inputs.force_build }}
     secrets: inherit

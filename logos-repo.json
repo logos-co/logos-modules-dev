@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "name": "CHANGE-ME-modules",
-  "displayName": "CHANGE ME — My Logos Modules",
-  "description": "A short human description of this module catalog.",
-  "homepage": "https://example.com/modules",
-  "indexUrl": "https://github.com/CHANGE-ME-OWNER/CHANGE-ME-REPO/releases/download/index/index.json",
+  "name": "logos-modules-dev",
+  "displayName": "Logos Dev (continuous builds)",
+  "description": "Continuous builds of Logos Messaging and RLN modules, one per commit on each module's default branch. Unsigned and untested \u2014 for development, not production.",
+  "homepage": "https://github.com/logos-co/logos-modules-dev",
+  "indexUrl": "https://github.com/logos-co/logos-modules-dev/releases/download/index/index.json",
   "trustedSigners": []
 }
