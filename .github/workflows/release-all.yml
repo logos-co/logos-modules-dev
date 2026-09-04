@@ -1,18 +1,5 @@
 name: Release all modules
 
-# Umbrella workflow: builds and publishes every module in this catalog
-# in parallel, at whatever commit the submodule pointers currently name.
-# Useful for the initial bootstrap and for a coordinated rebuild.
-#
-# The module list comes from modules.json, NOT from .gitmodules. A
-# submodule is a repository; a module is one metadata.json inside it,
-# and logos-rln-modules / logos-rln-gifter each hold several — so the
-# two lists are not the same length. Run scripts/sync-workflows.sh
-# after editing modules.json.
-#
-# Routine operation does not need this workflow: sync-modules.yml polls
-# the module branches and releases only what moved.
-
 on:
   workflow_dispatch:
     inputs:
@@ -21,35 +8,21 @@ on:
         type: boolean
         default: false
 
-# Forked repos default to a read-only GITHUB_TOKEN.
 permissions:
   contents: write
 
 jobs:
-  discover:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.scan.outputs.matrix }}
-      count: ${{ steps.scan.outputs.count }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: scan
-        shell: bash
-        run: |
-          set -euo pipefail
-          matrix="$(jq -c '{module_path: [.modules[].path]}' modules.json)"
-          count="$(jq '.modules | length' modules.json)"
-          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
-          echo "count=${count}"   >> "$GITHUB_OUTPUT"
-          echo "Discovered ${count} module(s):"
-          jq -r '.modules[] | "  \(.name)  (\(.path))"' modules.json
-
   release:
-    needs: discover
-    if: ${{ needs.discover.outputs.count != '0' }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+      matrix:
+        # Not derivable from .gitmodules: logos-rln-modules holds two modules.
+        module_path:
+          - submodules/logos-delivery-module
+          - submodules/logos-chat-module
+          - submodules/logos-rln-modules/logos-rln-module
+          - submodules/logos-rln-modules/logos-lez-rln-module
+          - submodules/logos-execution-zone-module
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}

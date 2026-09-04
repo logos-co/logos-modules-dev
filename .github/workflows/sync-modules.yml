@@ -1,41 +1,16 @@
 name: Sync module branches
 
-# The catalog's automatic trigger.
-#
 # GitHub does not notify a repository when a submodule it points at
-# moves, so a push to logos-chat-module's master is invisible here. This
-# workflow closes that gap by polling: it reads the tip of each
-# submodule's tracked branch, advances the pointers that moved, commits
-# them, and releases only those modules.
-#
-# `git ls-remote` + `git update-index` rather than
-# `git submodule update --remote`: the pointer is all that changes, and
-# resolving it this way costs one network round-trip per repository
-# instead of cloning six of them (some large) on every poll.
-#
-# The release job runs in THIS workflow run rather than dispatching
-# release-all.yml, because a push made with GITHUB_TOKEN does not
-# trigger `on: push` workflows and an API workflow_dispatch made with it
-# does not create a run — the anti-recursion rule. Doing the work inline
-# keeps the whole cycle on the default token, with no PAT to provision
-# or rotate.
+# moves, so the catalog polls for it.
 
 on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
-    inputs:
-      force_build:
-        description: "Release every module, not only the ones whose commit moved."
-        type: boolean
-        default: false
 
-# Committing the pointer bumps and publishing releases both need write.
 permissions:
   contents: write
 
-# One sync at a time. Two overlapping runs would race on the pointer
-# commit and could publish the same commit twice.
 concurrency:
   group: sync-modules
   cancel-in-progress: false
@@ -43,77 +18,38 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    outputs:
-      matrix:  ${{ steps.bump.outputs.matrix }}
-      count:   ${{ steps.bump.outputs.count }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: false
 
-      - id: bump
-        name: Advance submodule pointers to their branch tips
+      - name: Advance submodule pointers to their branch tips
         shell: bash
-        env:
-          FORCE_ALL: ${{ inputs.force_build }}
         run: |
           set -euo pipefail
-
-          moved=()
-          while read -r sub; do
-            path="$(git config -f .gitmodules --get "submodule.${sub}.path")"
-            url="$(git  config -f .gitmodules --get "submodule.${sub}.url")"
-            branch="$(git config -f .gitmodules --get "submodule.${sub}.branch" || echo HEAD)"
-
-            old="$(git rev-parse "HEAD:${path}")"
-            new="$(git ls-remote "${url}" "refs/heads/${branch}" | awk 'NR==1{print $1}')"
-            if [ -z "${new}" ]; then
-              echo "::warning::${path}: no ref refs/heads/${branch} at ${url} — leaving pointer at ${old:0:12}"
-              continue
-            fi
-
-            if [ "${new}" = "${old}" ]; then
-              echo "  ${path}: unchanged (${old:0:12})"
-              continue
-            fi
-            echo "  ${path}: ${old:0:12} -> ${new:0:12}"
-            # A gitlink can be written straight into the index; the
-            # submodule's contents are never needed here, only its sha.
-            git update-index --add --cacheinfo "160000,${new},${path}"
-            moved+=("${path}")
-          done < <(git config -f .gitmodules --name-only --get-regexp '^submodule\..*\.path$' \
-                   | sed -e 's/^submodule\.//' -e 's/\.path$//')
-
-          if [ "${#moved[@]}" -gt 0 ]; then
+          git submodule update --init --remote
+          git add submodules
+          if git diff --cached --quiet; then
+            echo "no submodule pointers moved"
+          else
             git -c user.name="github-actions[bot]" \
                 -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-                commit -m "sync: advance $(printf '%s\n' "${moved[@]}" | wc -l | tr -d ' ') submodule pointer(s)" \
-                       -m "$(printf '%s\n' "${moved[@]}")"
+                commit -m "sync: advance submodule pointers"
             git push
-          else
-            echo "no submodule pointers moved"
           fi
 
-          # Map moved SUBMODULES to the MODULES inside them: a
-          # multi-module repository yields several modules from one
-          # pointer bump.
-          if [ "${FORCE_ALL:-false}" = "true" ]; then
-            sel="$(jq -c '[.modules[].path]' modules.json)"
-          else
-            sel="$(printf '%s\n' "${moved[@]:-}" | jq -R . | jq -sc 'map(select(length>0))' \
-                   | jq -c --slurpfile m modules.json \
-                       '. as $moved | [$m[0].modules[] | select(.path as $p | $moved | any(. as $s | $p == $s or ($p | startswith($s + "/")))) | .path]')"
-          fi
-          echo "matrix={\"module_path\":${sel}}" >> "$GITHUB_OUTPUT"
-          echo "count=$(jq 'length' <<<"${sel}")" >> "$GITHUB_OUTPUT"
-          echo "releasing: ${sel}"
-
+  # Released here rather than by dispatching release-all.yml: a push made
+  # with GITHUB_TOKEN does not trigger `on: push`, and an API
+  # workflow_dispatch made with it does not create a run.
   release:
     needs: sync
-    if: ${{ needs.sync.outputs.count != '0' }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.sync.outputs.matrix) }}
+      matrix:
+        module_path:
+          - submodules/logos-delivery-module
+          - submodules/logos-chat-module
+          - submodules/logos-rln-modules/logos-rln-module
+          - submodules/logos-rln-modules/logos-lez-rln-module
+          - submodules/logos-execution-zone-module
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}

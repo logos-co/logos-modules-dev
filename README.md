@@ -1,19 +1,19 @@
 # logos-modules-dev
 
-A Logos module catalog that publishes **one build per commit on each
-module's default branch**, rather than one build per released version.
+A Logos module catalog built from every commit on each module's default
+branch, rather than from releases.
 
-Point a client at it to run the tip of every module:
+Add it to the package-manager UI / `lgpd` as:
 
 ```
 https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
 ```
 
-> These builds are unsigned, unreviewed, and pruned after a while. Use
-> [`logos-modules-release`](https://github.com/logos-co/logos-modules-release)
-> for anything that needs to keep working.
+Builds here are unsigned and untested. Use
+[`logos-modules-release`](https://github.com/logos-co/logos-modules-release)
+for anything that needs to keep working.
 
-## What's in it
+## Modules
 
 | Module | Source | Branch |
 |---|---|---|
@@ -21,114 +21,50 @@ https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.jso
 | `chat_module` | [logos-chat-module](https://github.com/logos-co/logos-chat-module) | `master` |
 | `liblogos_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `liblogos_lez_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
-| `rln_membership_ui` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `lez_core` | [logos-execution-zone-module](https://github.com/logos-blockchain/logos-execution-zone-module) | `main` |
-| `libp2p_module` | [logos-libp2p-module](https://github.com/logos-co/logos-libp2p-module) | `master` |
-| `rln_gifter_module` | [logos-rln-gifter](https://github.com/logos-co/logos-rln-gifter) | `master` |
-| `keycard_capture_module` | [logos-rln-gifter](https://github.com/logos-co/logos-rln-gifter) | `master` |
 
-`delivery_module`, `chat_module` and the three `logos-rln-modules`
-modules are the ones actually wanted here; the rest are the dependency
-closure — `chat_module` needs `delivery_module`, and `rln_membership_ui`
-needs `lez_core`, `libp2p_module`, `rln_gifter_module` and
-`keycard_capture_module`.
+`lez_core` is here as a dependency of `liblogos_lez_rln_module`.
 
-Six submodules, nine modules: `logos-rln-modules` holds three and
-`logos-rln-gifter` holds two. **`modules.json` is the module list**, not
-`.gitmodules`.
+Four submodules, five modules — `logos-rln-modules` holds two. The
+module list is the matrix in `release-all.yml` and `sync-modules.yml`,
+not `.gitmodules`.
 
-## How a build is triggered
+## Triggering
 
-GitHub does not notify this repository when a submodule it points at
-moves, so `sync-modules.yml` polls instead — **every 30 minutes**:
+`sync-modules.yml` runs every 30 minutes: it advances each submodule to
+its branch tip, commits the pointers, and releases. A module whose
+commit hasn't moved is skipped without building.
 
-1. `git ls-remote` reads the tip of each submodule's tracked branch.
-2. Pointers that moved are written into the index and committed here.
-3. Only the modules inside a moved submodule are released.
+Polling means a build tracks the branch tip, not every commit — several
+commits inside one interval produce one build, of the last of them.
 
-Polling means a build tracks the **branch tip**, not every intermediate
-commit: three commits landing inside one interval produce one build, of
-the last of them.
+Everything else is manual from the Actions tab: `Release all modules`,
+`Release <module>`, `Unpublish`. Or via `./scripts/catalog.sh`.
 
-Nothing else fires automatically. `release-all.yml` (rebuild
-everything), `release-<module>.yml` (rebuild one) and `unpublish.yml`
-are all manual, from the Actions tab.
-
-For instant builds instead of polling, each module repository would need
-a `push` workflow dispatching to this one, plus a token with write
-access here stored as a secret in each of the six — see
-[`docs/instant-triggers.md`](docs/instant-triggers.md).
-
-## Versions repeat, and that's expected
+## Versions repeat
 
 The tag carries the commit (`chat_module-1a2b3c4d5e6f`), but `version`
-still comes from the module's `metadata.json` and only moves when
-someone bumps it. So the catalog holds many builds all calling
-themselves `0.2.2`.
+comes from the module's `metadata.json` and only moves when someone
+bumps it, so the catalog holds many builds all calling themselves
+`0.2.2`. Clients sort same-version entries newest-first, so the tip
+build is still the one they resolve.
 
-Clients cope: `index.py` keys entries on `(version, rootHash)` and
-orders same-version entries newest-first, so `versions[0]` is the newest
-build. The package-manager UI will show the version repeated, separated
-only by date.
-
-## Retention
-
-`prune-builds.yml` keeps the newest **10** builds per module, nightly.
-
-This is not housekeeping — it is load-bearing. `rebuild-index`
-downloads every published `.lgx` to read its manifest, on every run.
-Without pruning, a per-commit catalog turns the index rebuild into an
-hours-long job within weeks.
+Releases are never deleted. Expect the `index` rebuild to slow down as
+they accumulate — it re-downloads every published `.lgx` each run.
 
 ## Adding a module
 
 ```bash
-./scripts/add-module.sh https://github.com/logos-co/<repo> [branch]
+./scripts/add-module.sh https://github.com/logos-co/<repo> <branch>
 ```
 
-Adds the submodule tracking its default branch, registers every
-`metadata.json` inside it in `modules.json`, and regenerates the
-per-module workflows. Review `modules.json`, commit, push.
+Then add its path to the matrix in `release-all.yml` and
+`sync-modules.yml`.
 
-Editing `modules.json` by hand is fine too — follow it with
-`./scripts/sync-workflows.sh`.
+## How it differs from the release catalog
 
-## Layout
-
-```
-.
-├── modules.json                          # THE module list (9 modules)
-├── logos-repo.json                       # catalog metadata clients read
-├── .gitmodules                           # 6 repos, each with a tracked branch
-├── scripts/
-│   ├── add-module.sh                     # add a repo + register its modules
-│   ├── sync-workflows.sh                 # regenerate per-module workflows
-│   └── catalog.sh                        # run the workflows via `gh`
-└── .github/workflows/
-    ├── sync-modules.yml                  # the poll → bump → release cycle
-    ├── prune-builds.yml                  # retention (keep 10 per module)
-    ├── _release-module.yml               # tag scheme + signing, one place
-    ├── release-module.yml.template        # generates the per-module files
-    ├── release-<module>.yml              # one per module, manual
-    ├── release-all.yml                   # rebuild everything, manual
-    ├── rebuild-index.yml                 # rebuilds index.json after releases
-    └── unpublish.yml                     # manual removal
-```
-
-## Relationship to the release catalog
-
-Same machinery as
-[`logos-modules-release`](https://github.com/logos-co/logos-modules-release),
-both built from the
+Same machinery, both from the
 [`logos-modules-release-base`](https://github.com/logos-co/logos-modules-release-base)
-template. The only pipeline difference is the tag: this catalog passes
-`tag_template: "{name}-{short_sha}"` to
-[`logos-modules-release-action`](https://github.com/logos-co/logos-modules-release-action),
-which turns the "skip if already published" gate into "skip unless this
-commit is new".
-
-## Notes for cloning
-
-```bash
-git submodule update --init --recursive
-```
+template. The one difference is `tag_template: "{name}-{short_sha}"` in
+`_release-module.yml`, which makes the action's "skip if already
+published" gate mean "skip unless this commit is new".

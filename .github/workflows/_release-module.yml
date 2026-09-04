@@ -37,11 +37,8 @@ on:
         required: true
       force_build:
         description: |
-          Rebuild and REPLACE the release for the module's current commit
-          instead of skipping it. Maps to the action's
-          `skip_if_published` (inverted). Normal runs skip a commit that
-          is already published; use this to heal a bad or half-finished
-          build of an unchanged commit.
+          Rebuild and REPLACE the release for the module's current
+          commit instead of skipping it.
         type: boolean
         default: false
 
@@ -56,16 +53,8 @@ jobs:
     with:
       module_path: ${{ inputs.module_path }}
 
-      # ─── What makes this a continuous-build catalog ──────────────────
-      # The stock scheme tags `<name>-v<version>`, so a catalog publishes
-      # once per version. Here the tag carries the module's commit
-      # instead, which turns `skip_if_published` into "skip unless this
-      # commit is new" — one release per commit on the default branch.
-      #
-      # `version` still comes from metadata.json and repeats across
-      # builds. index.py keys entries on (version, rootHash) and orders
-      # same-version entries newest-first, so `versions[0]` remains the
-      # tip build.
+      # Tagging by commit rather than version turns `skip_if_published`
+      # into "skip unless this commit is new".
       tag_template: "{name}-{short_sha}"
       release_name_template: "{name} {version} ({short_sha})"
 

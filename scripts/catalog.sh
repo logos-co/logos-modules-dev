@@ -15,14 +15,9 @@
 #                         Trigger release-<module>.yml. With no <module>,
 #                         list the modules this catalog publishes.
 #   release-all [--force] Trigger release-all.yml (re)release every module.
-#   sync [--force]        Trigger sync-modules.yml — poll the module
-#                         branches, advance the pointers that moved and
-#                         release those modules. Runs every 30 minutes on
+#   sync                  Trigger sync-modules.yml — advance the submodule
+#                         pointers and release. Runs every 30 minutes on
 #                         its own; this is for when you don't want to wait.
-#                         --force releases every module, not only moved ones.
-#   prune [--keep=N] [--dry-run]
-#                         Trigger prune-builds.yml. Keeps the newest N (10)
-#                         builds per module and deletes the rest.
 #   rebuild-index         Trigger rebuild-index.yml (regenerate index.json).
 #   unpublish <module> [<version>] [--dry-run] [--keep-tags]
 #                         Trigger unpublish.yml. Removes a module from the
@@ -43,7 +38,6 @@
 #   ./scripts/catalog.sh release logos-chat-module --force
 #   ./scripts/catalog.sh release-all --watch
 #   ./scripts/catalog.sh sync --watch
-#   ./scripts/catalog.sh prune --keep=5 --dry-run
 #   ./scripts/catalog.sh rebuild-index
 #   ./scripts/catalog.sh unpublish logos-chat-module --dry-run
 #   ./scripts/catalog.sh unpublish logos-chat-module 1.2.3
@@ -74,7 +68,6 @@ print_usage() {
 WATCH=0
 DRY_RUN=0
 KEEP_TAGS=0
-KEEP_N=10
 FORCE=0
 ARGS=()
 for a in "$@"; do
@@ -82,7 +75,6 @@ for a in "$@"; do
     --watch)      WATCH=1 ;;
     --dry-run)    DRY_RUN=1 ;;
     --keep-tags)  KEEP_TAGS=1 ;;
-    --keep=*)     KEEP_N="${a#*=}" ;;
     --force)      FORCE=1 ;;
     -h|--help)    print_usage; exit 0 ;;
     -*)           die "unknown flag: $a (see --help)" ;;
@@ -203,17 +195,7 @@ case "$CMD" in
     ;;
 
   sync)
-    if [ "$FORCE" = "1" ]; then
-      run_workflow "sync-modules.yml" -f "force_build=true"
-    else
-      run_workflow "sync-modules.yml"
-    fi
-    ;;
-
-  prune)
-    DRY="false"
-    [ "$DRY_RUN" = "1" ] && DRY="true"
-    run_workflow "prune-builds.yml" -f "keep=${KEEP_N}" -f "dry_run=${DRY}"
+    run_workflow "sync-modules.yml"
     ;;
 
   rebuild-index)

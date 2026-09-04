@@ -1,17 +1,5 @@
-; The repositories this catalog builds from.
-;
-; Every entry MUST carry a `branch`: sync-modules.yml reads it to find
-; the tip to advance the pointer to, and a submodule without one is
-; never built again after it is added.
-;
-; This is NOT the module list — a repository can hold several modules.
-; That list is modules.json. Add a repository with:
-;
-;   ./scripts/add-module.sh https://github.com/<owner>/<repo> [branch]
-;
-; After cloning, materialise the submodule working trees with:
-;
-;   git submodule update --init --recursive
+; Every entry must carry a `branch`: sync-modules.yml advances a
+; submodule to the tip of the branch recorded here.
 
 [submodule "submodules/logos-delivery-module"]
 	path = submodules/logos-delivery-module
@@ -29,11 +17,3 @@
 	path = submodules/logos-execution-zone-module
 	url = https://github.com/logos-blockchain/logos-execution-zone-module
 	branch = main
-[submodule "submodules/logos-libp2p-module"]
-	path = submodules/logos-libp2p-module
-	url = https://github.com/logos-co/logos-libp2p-module
-	branch = master
-[submodule "submodules/logos-rln-gifter"]
-	path = submodules/logos-rln-gifter
-	url = https://github.com/logos-co/logos-rln-gifter
-	branch = master
