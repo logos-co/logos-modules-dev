@@ -1,173 +1,133 @@
-# logos-modules-release-base
+# logos-modules-dev
 
-A **fork-me** starting point for running your own Logos module catalog.
+A Logos module catalog that publishes **one build per commit on each
+module's default branch**, rather than one build per released version.
 
-Fork this repo, add your modules as submodules, push — and you have a
-working module repository that the Logos clients (`lgpd`, the
-`package_downloader` module, the package-manager UI) can install from.
+Point a client at it to run the tip of every module:
 
-All the release machinery lives in the versioned, reusable
-[`logos-co/logos-modules-release-action`](https://github.com/logos-co/logos-modules-release-action).
-This repo only holds *your* submodules, *your* catalog metadata, and a
-thin layer of workflows that call the action. The canonical production
-catalog,
-[`logos-co/logos-modules-v2`](https://github.com/logos-co/logos-modules-v2),
-is built exactly this way.
+```
+https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
+```
 
-## Quick start
+> These builds are unsigned, unreviewed, and pruned after a while. Use
+> [`logos-modules-release`](https://github.com/logos-co/logos-modules-release)
+> for anything that needs to keep working.
 
-1. **Fork** this repo (GitHub → *Use this template* / *Fork*).
+## What's in it
 
-2. **Edit `logos-repo.json`** — this is how clients identify your
-   catalog. Replace every `CHANGE-ME` and set `indexUrl` to point at
-   *your* fork:
+| Module | Source | Branch |
+|---|---|---|
+| `delivery_module` | [logos-delivery-module](https://github.com/logos-co/logos-delivery-module) | `master` |
+| `chat_module` | [logos-chat-module](https://github.com/logos-co/logos-chat-module) | `master` |
+| `liblogos_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
+| `liblogos_lez_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
+| `rln_membership_ui` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
+| `lez_core` | [logos-execution-zone-module](https://github.com/logos-blockchain/logos-execution-zone-module) | `main` |
+| `libp2p_module` | [logos-libp2p-module](https://github.com/logos-co/logos-libp2p-module) | `master` |
+| `rln_gifter_module` | [logos-rln-gifter](https://github.com/logos-co/logos-rln-gifter) | `master` |
+| `keycard_capture_module` | [logos-rln-gifter](https://github.com/logos-co/logos-rln-gifter) | `master` |
 
-   ```json
-   {
-     "schemaVersion": 1,
-     "name": "my-modules",
-     "displayName": "My Modules",
-     "description": "My personal Logos modules.",
-     "homepage": "https://example.com",
-     "indexUrl": "https://github.com/<your-owner>/<your-repo>/releases/download/index/index.json",
-     "trustedSigners": []
-   }
-   ```
+`delivery_module`, `chat_module` and the three `logos-rln-modules`
+modules are the ones actually wanted here; the rest are the dependency
+closure — `chat_module` needs `delivery_module`, and `rln_membership_ui`
+needs `lez_core`, `libp2p_module`, `rln_gifter_module` and
+`keycard_capture_module`.
 
-3. **Add your modules**:
+Six submodules, nine modules: `logos-rln-modules` holds three and
+`logos-rln-gifter` holds two. **`modules.json` is the module list**, not
+`.gitmodules`.
 
-   ```bash
-   git clone https://github.com/<your-owner>/<your-repo>
-   cd <your-repo>
-   ./scripts/add-module.sh https://github.com/<you>/<your-module-repo>
-   git add -A && git commit -m "Add <your-module-repo>" && git push
-   ```
+## How a build is triggered
 
-   `add-module.sh` registers the submodule **and** generates its
-   per-module release workflow. Repeat for each module.
+GitHub does not notify this repository when a submodule it points at
+moves, so `sync-modules.yml` polls instead — **every 30 minutes**:
 
-4. **Publish.** From the repo's **Actions** tab, run **Release all
-   modules** (or an individual **Release \<module\>**) — or, from a
-   terminal, `./scripts/catalog.sh release-all`. The action builds each
-   `.lgx`, verifies it, optionally signs it, cuts a `<module>-v<version>`
-   GitHub release, and rolls everything up into the `index` release that
-   clients read.
+1. `git ls-remote` reads the tip of each submodule's tracked branch.
+2. Pointers that moved are written into the index and committed here.
+3. Only the modules inside a moved submodule are released.
 
-5. **Point a client at it.** Add your fork's `logos-repo.json` raw URL
-   as a repository in the package-manager UI / `lgpd`:
+Polling means a build tracks the **branch tip**, not every intermediate
+commit: three commits landing inside one interval produce one build, of
+the last of them.
 
-   ```
-   https://raw.githubusercontent.com/<your-owner>/<your-repo>/<default-branch>/logos-repo.json
-   ```
+Nothing else fires automatically. `release-all.yml` (rebuild
+everything), `release-<module>.yml` (rebuild one) and `unpublish.yml`
+are all manual, from the Actions tab.
 
-That's it. Bumping a submodule pointer (which moves its
-`metadata.json#version`) and re-running its workflow publishes a new
-version; clients pick it up on their next catalog refresh.
+For instant builds instead of polling, each module repository would need
+a `push` workflow dispatching to this one, plus a token with write
+access here stored as a secret in each of the six — see
+[`docs/instant-triggers.md`](docs/instant-triggers.md).
+
+## Versions repeat, and that's expected
+
+The tag carries the commit (`chat_module-1a2b3c4d5e6f`), but `version`
+still comes from the module's `metadata.json` and only moves when
+someone bumps it. So the catalog holds many builds all calling
+themselves `0.2.2`.
+
+Clients cope: `index.py` keys entries on `(version, rootHash)` and
+orders same-version entries newest-first, so `versions[0]` is the newest
+build. The package-manager UI will show the version repeated, separated
+only by date.
+
+## Retention
+
+`prune-builds.yml` keeps the newest **10** builds per module, nightly.
+
+This is not housekeeping — it is load-bearing. `rebuild-index`
+downloads every published `.lgx` to read its manifest, on every run.
+Without pruning, a per-commit catalog turns the index rebuild into an
+hours-long job within weeks.
+
+## Adding a module
+
+```bash
+./scripts/add-module.sh https://github.com/logos-co/<repo> [branch]
+```
+
+Adds the submodule tracking its default branch, registers every
+`metadata.json` inside it in `modules.json`, and regenerates the
+per-module workflows. Review `modules.json`, commit, push.
+
+Editing `modules.json` by hand is fine too — follow it with
+`./scripts/sync-workflows.sh`.
 
 ## Layout
 
 ```
 .
-├── logos-repo.json                       # YOUR catalog metadata — edit this
-├── .gitmodules                           # submodule declarations (starts empty)
-├── submodules/                           # one git submodule per module (you add these)
+├── modules.json                          # THE module list (9 modules)
+├── logos-repo.json                       # catalog metadata clients read
+├── .gitmodules                           # 6 repos, each with a tracked branch
 ├── scripts/
-│   ├── add-module.sh                     # add a submodule + generate its workflow
-│   └── catalog.sh                        # run the catalog workflows via `gh` (no Actions tab)
+│   ├── add-module.sh                     # add a repo + register its modules
+│   ├── sync-workflows.sh                 # regenerate per-module workflows
+│   └── catalog.sh                        # run the workflows via `gh`
 └── .github/workflows/
-    ├── _release-module.yml               # signing config — the ONE place to edit it
-    ├── release-module.yml.template       # per-module workflow template (don't run; it's a template)
-    ├── release-all.yml                   # umbrella; discovers modules from .gitmodules
-    ├── rebuild-index.yml                 # rebuilds index.json after each release
-    └── unpublish.yml                     # manually remove a module / version from the catalog
+    ├── sync-modules.yml                  # the poll → bump → release cycle
+    ├── prune-builds.yml                  # retention (keep 10 per module)
+    ├── _release-module.yml               # tag scheme + signing, one place
+    ├── release-module.yml.template        # generates the per-module files
+    ├── release-<module>.yml              # one per module, manual
+    ├── release-all.yml                   # rebuild everything, manual
+    ├── rebuild-index.yml                 # rebuilds index.json after releases
+    └── unpublish.yml                     # manual removal
 ```
 
-### Workflow architecture
+## Relationship to the release catalog
 
-Two-tier reusable workflows so the signing pipeline lives in exactly
-one place:
+Same machinery as
+[`logos-modules-release`](https://github.com/logos-co/logos-modules-release),
+both built from the
+[`logos-modules-release-base`](https://github.com/logos-co/logos-modules-release-base)
+template. The only pipeline difference is the tag: this catalog passes
+`tag_template: "{name}-{short_sha}"` to
+[`logos-modules-release-action`](https://github.com/logos-co/logos-modules-release-action),
+which turns the "skip if already published" gate into "skip unless this
+commit is new".
 
-- **`_release-module.yml`** — local *private* reusable workflow
-  (`workflow_call` only, so it never shows up as runnable in the
-  Actions UI). Calls
-  `logos-co/logos-modules-release-action/.github/workflows/release.yml@v1`
-  with this catalog's signing configuration.
-- **`release-<module>.yml`** — one per module, generated by
-  `add-module.sh`. Each just passes `module_path: submodules/<repo>` to
-  `_release-module.yml`. Lets you cut a single module from the Actions
-  UI.
-- **`release-all.yml`** — umbrella. **Discovers** the module list from
-  `.gitmodules` at run time (no hand-maintained matrix) and fans out to
-  `_release-module.yml` per module in parallel.
-- **`rebuild-index.yml`** — thin passthrough to the action's
-  index-rebuilder. Auto-triggered after each release; also runs on a
-  6-hourly catch-up schedule.
-- **`unpublish.yml`** — manual (Actions tab). Removes a whole module
-  or one specific version: deletes the release(s) + optionally their
-  tags, then rebuilds the index. **Run with `dry_run: true` first** —
-  deletion is irreversible. Re-running a release for an unchanged
-  submodule is a fast no-op (the action skips builds whose
-  `<module>-v<version>` is already published).
-
-Both **Release \<module\>** and **Release all modules** take a **Force
-build** toggle on the *Run workflow* form (off by default). Leave it off
-for the normal skip-if-already-published behaviour; turn it on to rebuild
-and **replace** the current release when the version is unchanged — handy
-after a half-published release or a build-pipeline fix. From the terminal
-it's `./scripts/catalog.sh release <module> --force` (or `release-all
---force`).
-
-Every workflow declares `permissions: contents: write` because a
-forked repo's default `GITHUB_TOKEN` is read-only, and the release job
-must create releases / upload assets.
-
-To change signing for the whole catalog, edit **`_release-module.yml`
-only** — the per-module callers and the umbrella never need touching.
-
-## Signing
-
-Ships **unsigned** (`signing_mode: none`) so a fresh fork works
-immediately. When you're ready to sign, follow the inline instructions
-at the top of
-[`.github/workflows/_release-module.yml`](.github/workflows/_release-module.yml):
-
-| Mode | What runs | Where the key lives |
-|---|---|---|
-| `none` (default) | nothing | n/a — unsigned releases |
-| `inline` | `lgx sign` in CI | `LOGOS_SIGNING_KEY` Actions secret (Ed25519 JWK) |
-| `external` | your `signing_command` | anywhere (Jenkins / HSM / hardware token) |
-
-For `inline`, also put the matching public DID under `trustedSigners`
-in `logos-repo.json` so clients trust your signature.
-
-## Pinning the action version
-
-The workflows reference `…/release.yml@v1` — a moving tag tracking the
-latest 1.x of the action. For reproducible releases, pin an exact tag
-(e.g. `@v1.2.3`) instead. A bump to `@v2` signals a breaking change to
-the workflow inputs or the index schema; stay on `@v1` until you've
-read its migration notes.
-
-## Managing `index.json` without GitHub Actions
-
-If you'd rather host `.lgx` files yourself (S3, your own server, a
-file share — anywhere `lgpd` can `GET` from) and not rely on this
-repo's GitHub-Actions index builder,
-[`logos-co/logos-modules-release-tool`](https://github.com/logos-co/logos-modules-release-tool)
-ships a single-file CLI (`index.py`) that builds, edits and validates
-an `index.json` from a plain list of `.lgx` URLs (or local files for
-packages you've just uploaded yourself). The output is byte-compatible
-with what `rebuild-index.yml` here produces, so clients consume it
-identically.
-
-The GitHub Actions path in this repo stays the default — the tool is
-for catalog maintainers who want a fully non-GitHub setup, or who want
-local control over partial / incremental index edits.
-
-## Notes for cloning a fork
-
-`.gitmodules` is committed but submodule working trees are not — after
-cloning your fork, run:
+## Notes for cloning
 
 ```bash
 git submodule update --init --recursive

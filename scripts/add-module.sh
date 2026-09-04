@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Add a Logos module to this catalog: registers it as a git submodule
-# under submodules/ and generates the matching per-module release
-# workflow from .github/workflows/release-module.yml.template.
+# Add a repository to this catalog: registers it as a git submodule
+# under submodules/, records every module found inside it in
+# modules.json, and regenerates the per-module release workflows.
 #
 # Usage:
-#   ./scripts/add-module.sh <git-url> [submodule-name] [branch]
+#   ./scripts/add-module.sh <git-url> [branch] [submodule-name]
 #
-# Examples:
-#   ./scripts/add-module.sh https://github.com/me/my-cool-module
-#   ./scripts/add-module.sh https://github.com/me/my-cool-module my-cool-module main
+# The branch matters here in a way it does not in a release catalog:
+# sync-modules.yml polls `.gitmodules`'s `branch` for each submodule, so
+# a submodule added without one is never advanced automatically. When
+# omitted it is resolved from the remote's default branch.
 #
-# After running:
-#   - review `git status`
-#   - commit (.gitmodules, submodules/<name>, the new workflow file)
-#   - push, then trigger "Release <name>" from the Actions tab
-#     (or run the umbrella "Release all modules")
+# A repository may hold more than one module (logos-rln-modules holds
+# three), so every metadata.json under it is registered separately.
+# Review modules.json afterwards and drop anything that isn't a
+# publishable module.
 
 set -euo pipefail
 
@@ -22,53 +22,59 @@ cd "$(git rev-parse --show-toplevel)"
 
 URL="${1:-}"
 if [ -z "${URL}" ]; then
-  echo "usage: $0 <git-url> [submodule-name] [branch]" >&2
+  echo "usage: $0 <git-url> [branch] [submodule-name]" >&2
   exit 2
 fi
-
-# Derive a default submodule directory name from the URL basename.
-NAME="${2:-}"
-if [ -z "${NAME}" ]; then
-  NAME="$(basename "${URL%.git}")"
-fi
-BRANCH="${3:-}"
-
+BRANCH="${2:-}"
+NAME="${3:-$(basename "${URL%.git}")}"
 PATH_REL="submodules/${NAME}"
-TEMPLATE=".github/workflows/release-module.yml.template"
-WORKFLOW=".github/workflows/release-${NAME}.yml"
-
-if [ ! -f "${TEMPLATE}" ]; then
-  echo "error: ${TEMPLATE} not found — run from a fork of logos-modules-release-base" >&2
-  exit 1
-fi
 
 if [ -e "${PATH_REL}" ]; then
   echo "error: ${PATH_REL} already exists" >&2
   exit 1
 fi
 
-echo "==> adding submodule ${NAME}"
-if [ -n "${BRANCH}" ]; then
-  git submodule add -b "${BRANCH}" "${URL}" "${PATH_REL}"
-else
-  git submodule add "${URL}" "${PATH_REL}"
+if [ -z "${BRANCH}" ]; then
+  BRANCH="$(git ls-remote --symref "${URL}" HEAD \
+            | awk '/^ref:/ {sub("refs/heads/","",$2); print $2; exit}')"
+  [ -n "${BRANCH}" ] || { echo "error: could not resolve the default branch of ${URL}" >&2; exit 1; }
+  echo "==> default branch: ${BRANCH}"
 fi
 
-echo "==> generating ${WORKFLOW}"
-sed "s/__MODULE__/${NAME}/g" "${TEMPLATE}" > "${WORKFLOW}"
+echo "==> adding submodule ${NAME} (tracking ${BRANCH})"
+git submodule add -b "${BRANCH}" "${URL}" "${PATH_REL}"
 
-cat <<EOF
+echo "==> registering modules found under ${PATH_REL}"
+found=0
+while read -r meta; do
+  dir="$(dirname "${meta}")"
+  mname="$(jq -r '.name // empty' "${meta}")"
+  [ -n "${mname}" ] || { echo "    skip ${dir} (metadata.json has no name)"; continue; }
+  if jq -e --arg n "${mname}" '.modules[] | select(.name == $n)' modules.json >/dev/null; then
+    echo "    skip ${mname} (already in modules.json)"
+    continue
+  fi
+  tmp="$(mktemp)"
+  jq --arg n "${mname}" --arg p "${dir}" \
+     '.modules += [{name: $n, path: $p}]' modules.json > "${tmp}"
+  mv "${tmp}" modules.json
+  echo "    + ${mname}  (${dir})"
+  found=$((found + 1))
+done < <(find "${PATH_REL}" -maxdepth 4 -name metadata.json -not -path '*/node_modules/*' | sort)
 
-Done. Next:
+if [ "${found}" = 0 ]; then
+  echo "::warning:: no metadata.json found under ${PATH_REL}" >&2
+fi
 
-  git add .gitmodules "${PATH_REL}" "${WORKFLOW}"
-  git commit -m "Add ${NAME}"
-  git push
+echo "==> regenerating per-module workflows"
+./scripts/sync-workflows.sh
 
-Then publish it:
-  - Actions tab → "Release ${NAME}" → Run workflow
-  - or run "Release all modules" to (re)publish everything
+cat <<MSG
 
-A new release is cut whenever you bump the submodule pointer
-(and thereby its metadata.json#version) and re-run the workflow.
-EOF
+Done. Review modules.json, then:
+
+  git add -A && git commit -m "Add ${NAME}" && git push
+
+sync-modules.yml picks the new submodule up on its next poll; to build
+it immediately, run "Release <module>" from the Actions tab.
+MSG

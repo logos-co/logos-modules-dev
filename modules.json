@@ -1,0 +1,14 @@
+{
+  "$comment": "Source of truth for the module list. A submodule is a REPOSITORY; a module is one metadata.json inside it. logos-rln-modules and logos-rln-gifter each hold several, so this cannot be derived from .gitmodules. Maintained by scripts/add-module.sh; consumed by release-all.yml, prune-builds.yml and scripts/sync-workflows.sh.",
+  "modules": [
+    { "name": "delivery_module",          "path": "submodules/logos-delivery-module" },
+    { "name": "chat_module",              "path": "submodules/logos-chat-module" },
+    { "name": "liblogos_rln_module",      "path": "submodules/logos-rln-modules/logos-rln-module" },
+    { "name": "liblogos_lez_rln_module",  "path": "submodules/logos-rln-modules/logos-lez-rln-module" },
+    { "name": "rln_membership_ui",        "path": "submodules/logos-rln-modules/logos-rln-membership-ui" },
+    { "name": "lez_core",                 "path": "submodules/logos-execution-zone-module" },
+    { "name": "libp2p_module",            "path": "submodules/logos-libp2p-module" },
+    { "name": "rln_gifter_module",        "path": "submodules/logos-rln-gifter/rust/rln-gifter-module" },
+    { "name": "keycard_capture_module",   "path": "submodules/logos-rln-gifter/rust/keycard-capture-module" }
+  ]
+}
