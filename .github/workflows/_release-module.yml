@@ -59,11 +59,7 @@ jobs:
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ inputs.module_ref }}
-
-      # {commits} is its own numeric identifier so semver compares it
-      # numerically; git describe's `-10-gabc` sorts below `-2-gabc`.
       version_template: "{version}-{commits}.g{short_sha}"
-
       tag_template: "{name}-{short_sha}"
       release_name_template: "{name} {version} ({short_sha})"
 
