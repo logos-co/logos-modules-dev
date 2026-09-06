@@ -55,9 +55,7 @@ permissions:
 
 jobs:
   release:
-    # v1.4 is the tag carrying both tag_template and module_ref. It has
-    # to exist before this is merged; see the PR.
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@v1.4
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/module-ref
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ inputs.module_ref }}
