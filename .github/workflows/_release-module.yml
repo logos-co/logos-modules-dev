@@ -59,11 +59,7 @@ jobs:
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ inputs.module_ref }}
-
-      # Tagging by commit rather than version turns `skip_if_published`
-      # into "skip unless this commit is new".
-      tag_template: "{name}-{short_sha}"
-      release_name_template: "{name} {version} ({short_sha})"
+      version_template: "{version}-{commits}.g{short_sha}"
 
       # Normal runs skip a version that's already fully published; "Force
       # build" (force_build: true) republishes it by disabling that skip.

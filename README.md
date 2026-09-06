@@ -58,15 +58,17 @@ branch can produce different packages.
 Automatic builds are the next iteration: each module repository
 dispatching to this one on a push to its default branch.
 
-## Versions repeat
+## Versions
 
-The tag carries the commit (`chat_module-1a2b3c4d5e6f`), but `version`
-comes from the module's `metadata.json` and only moves when someone
-bumps it, so the catalog holds many builds all calling themselves
-`0.2.2`. Clients sort same-version entries newest-first, so the tip
-build is still the one they resolve.
+Each build is versioned from the module's `metadata.json` plus its commit
+count and sha — `delivery_module` at `3770771` publishes as
+`0.2.1-130.g3770771`. `metadata.json` is rewritten in the build
+checkout only; the module repository is untouched.
 
-Releases are never deleted. Expect the `index` rebuild to slow down as
+These are pre-release versions, so they rank below a plain `0.2.1`. Don't
+publish a release build of the same version here.
+
+Releases are never deleted, so expect the `index` rebuild to slow down as
 they accumulate — it re-downloads every published `.lgx` each run.
 
 ## Adding a module
@@ -81,6 +83,8 @@ Then add its path to the matrix in `release-all.yml`.
 
 Same machinery, both from the
 [`logos-modules-release-base`](https://github.com/logos-co/logos-modules-release-base)
-template. The one difference is `tag_template: "{name}-{short_sha}"` in
-`_release-module.yml`, which makes the action's "skip if already
-published" gate mean "skip unless this commit is new".
+template. The one difference is
+`version_template: "{version}-{commits}.g{short_sha}"` in
+`_release-module.yml`: every commit gets its own version, so the
+release tag is unique per commit and the action's "skip if already
+published" gate means "skip unless this commit is new".
