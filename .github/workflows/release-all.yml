@@ -23,6 +23,7 @@ jobs:
           - submodules/logos-rln-modules/logos-rln-module
           - submodules/logos-rln-modules/logos-lez-rln-module
           - submodules/logos-execution-zone-module
+          - submodules/openmetrics-module
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}
