@@ -83,6 +83,8 @@ Then add its path to the matrix in `release-all.yml`.
 
 Same machinery, both from the
 [`logos-modules-release-base`](https://github.com/logos-co/logos-modules-release-base)
-template. The one difference is `tag_template: "{name}-{short_sha}"` in
-`_release-module.yml`, which makes the action's "skip if already
-published" gate mean "skip unless this commit is new".
+template. The one difference is
+`version_template: "{version}-{commits}.g{short_sha}"` in
+`_release-module.yml`: every commit gets its own version, so the
+release tag is unique per commit and the action's "skip if already
+published" gate means "skip unless this commit is new".
