@@ -58,13 +58,22 @@ branch can produce different packages.
 Automatic builds are the next iteration: each module repository
 dispatching to this one on a push to its default branch.
 
-## Versions repeat
+## Versions
 
-The tag carries the commit (`chat_module-1a2b3c4d5e6f`), but `version`
-comes from the module's `metadata.json` and only moves when someone
-bumps it, so the catalog holds many builds all calling themselves
-`0.2.2`. Clients sort same-version entries newest-first, so the tip
-build is still the one they resolve.
+Each build's version is derived from the module's `metadata.json` plus
+its commit count and sha, so a build of `delivery_module` at commit
+`3770771eba53` publishes as `0.2.1-130.g3770771eba53`. `metadata.json`
+is rewritten in the build checkout only; the module repository is not
+touched.
+
+`{commits}` is a separate numeric identifier because SemVer compares
+those numerically. `git describe`'s `0.2.1-10-gabc` is one alphanumeric
+identifier and sorts *below* `0.2.1-2-gabc`, which would leave clients
+resolving an old build as latest.
+
+These are all pre-release versions, so they rank below a plain `0.2.1`.
+Don't mix a released build of the same version into this catalog — it
+would outrank every per-commit build of it.
 
 Releases are never deleted. Expect the `index` rebuild to slow down as
 they accumulate — it re-downloads every published `.lgx` each run.

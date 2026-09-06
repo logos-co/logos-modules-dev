@@ -55,13 +55,15 @@ permissions:
 
 jobs:
   release:
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/module-ref
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/tag-template
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ inputs.module_ref }}
 
-      # Tagging by commit rather than version turns `skip_if_published`
-      # into "skip unless this commit is new".
+      # {commits} is its own numeric identifier so semver compares it
+      # numerically; git describe's `-10-gabc` sorts below `-2-gabc`.
+      version_template: "{version}-{commits}.g{short_sha}"
+
       tag_template: "{name}-{short_sha}"
       release_name_template: "{name} {version} ({short_sha})"
 
