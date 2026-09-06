@@ -21,3 +21,11 @@
 	path = submodules/openmetrics-module
 	url = https://github.com/logos-co/openmetrics-module
 	branch = main
+[submodule "submodules/logos-delivery-demo"]
+	path = submodules/logos-delivery-demo
+	url = https://github.com/logos-co/logos-delivery-demo
+	branch = main
+[submodule "submodules/logos-chat-ui"]
+	path = submodules/logos-chat-ui
+	url = https://github.com/logos-co/logos-chat-ui
+	branch = master
