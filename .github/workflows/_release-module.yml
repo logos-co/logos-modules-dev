@@ -55,7 +55,7 @@ permissions:
 
 jobs:
   release:
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/module-ref
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/extra-nix-config
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ inputs.module_ref }}
