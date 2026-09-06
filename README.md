@@ -61,8 +61,8 @@ dispatching to this one on a push to its default branch.
 ## Versions
 
 Each build is versioned from the module's `metadata.json` plus its commit
-count and sha — `delivery_module` at `3770771eba53` publishes as
-`0.2.1-130.g3770771eba53`. `metadata.json` is rewritten in the build
+count and sha — `delivery_module` at `3770771` publishes as
+`0.2.1-130.g3770771`. `metadata.json` is rewritten in the build
 checkout only; the module repository is untouched.
 
 These are pre-release versions, so they rank below a plain `0.2.1`. Don't
