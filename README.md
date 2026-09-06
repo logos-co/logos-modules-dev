@@ -22,10 +22,11 @@ for anything that needs to keep working.
 | `liblogos_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `liblogos_lez_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `lez_core` | [logos-execution-zone-module](https://github.com/logos-blockchain/logos-execution-zone-module) | `main` |
+| `openmetrics` | [openmetrics-module](https://github.com/logos-co/openmetrics-module) | `main` |
 
 `lez_core` is here as a dependency of `liblogos_lez_rln_module`.
 
-Four submodules, five modules — `logos-rln-modules` holds two. The
+Five submodules, six modules — `logos-rln-modules` holds two. The
 module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
 ## Building

@@ -17,3 +17,7 @@
 	path = submodules/logos-execution-zone-module
 	url = https://github.com/logos-blockchain/logos-execution-zone-module
 	branch = main
+[submodule "submodules/openmetrics-module"]
+	path = submodules/openmetrics-module
+	url = https://github.com/logos-co/openmetrics-module
+	branch = main
