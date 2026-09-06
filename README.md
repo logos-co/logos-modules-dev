@@ -48,6 +48,13 @@ then run **Release all modules** from the Actions tab, or:
 A module whose commit hasn't moved is skipped without building, so
 re-running costs one API call per module.
 
+To build something other than the pointer — a feature branch, or an
+older commit — run **Release <module>** and fill in `module_ref` with a
+branch, tag or sha from the module's own repository. The submodule
+pointer here is left alone, so the build leaves no trace in the catalog
+beyond its release; and because a branch moves, two runs naming the same
+branch can produce different packages.
+
 Automatic builds are the next iteration: each module repository
 dispatching to this one on a push to its default branch.
 
