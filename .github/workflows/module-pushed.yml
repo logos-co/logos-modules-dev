@@ -1,0 +1,88 @@
+name: Module pushed
+
+# Fired by a module repository when its default branch moves. See
+# docs/notify-workflow.md for the sending half.
+#
+# repository_dispatch only reaches workflows on the default branch, so
+# this file has no effect on a feature branch.
+
+on:
+  repository_dispatch:
+    types: [module-pushed]
+  workflow_dispatch:
+    inputs:
+      submodule:
+        description: "Advance only this submodule (e.g. logos-chat-module). Blank = all."
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: module-pushed
+  cancel-in-progress: false
+
+jobs:
+  advance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Advance submodule pointers
+        shell: bash
+        env:
+          # `github.repository` of the sender, e.g. logos-co/logos-chat-module.
+          PAYLOAD_REPO: ${{ github.event.client_payload.repo }}
+          INPUT_SUBMODULE: ${{ inputs.submodule }}
+        run: |
+          set -euo pipefail
+
+          want="${INPUT_SUBMODULE:-$(basename "${PAYLOAD_REPO:-}")}"
+
+          target=""
+          if [ -n "${want}" ]; then
+            # Matched against the declared submodules rather than
+            # interpolated into a path: client_payload is attacker-
+            # controlled by anyone who can fire the dispatch.
+            if git config -f .gitmodules --get-regexp '^submodule\..*\.path$' \
+               | awk '{print $2}' | grep -qx "submodules/${want}"; then
+              target="submodules/${want}"
+            else
+              echo "::notice::${want} is not a submodule of this catalog — advancing all"
+            fi
+          fi
+
+          if [ -n "${target}" ]; then
+            git submodule update --init --remote -- "${target}"
+          else
+            git submodule update --init --remote
+          fi
+
+          git add submodules
+          if git diff --cached --quiet; then
+            echo "no submodule pointers moved"
+          else
+            git -c user.name="github-actions[bot]" \
+                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+                commit -m "sync: advance submodule pointers"
+            git push
+          fi
+
+  # Every module is offered; the action skips the ones whose commit
+  # did not move.
+  release:
+    needs: advance
+    strategy:
+      fail-fast: false
+      matrix:
+        module_path:
+          - submodules/logos-delivery-module
+          - submodules/logos-chat-module
+          - submodules/logos-rln-modules/logos-rln-module
+          - submodules/logos-rln-modules/logos-lez-rln-module
+          - submodules/logos-execution-zone-module
+    uses: ./.github/workflows/_release-module.yml
+    with:
+      module_path: ${{ matrix.module_path }}
+    secrets: inherit
