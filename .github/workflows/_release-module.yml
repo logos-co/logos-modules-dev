@@ -35,6 +35,12 @@ on:
         description: "Path to the module (e.g. submodules/<repo>, or a subdirectory of one)."
         type: string
         required: true
+      module_ref:
+        description: |
+          Branch, tag or commit sha in the module's own repository to
+          build. Blank uses the submodule pointer.
+        type: string
+        default: ""
       force_build:
         description: |
           Rebuild and REPLACE the release for the module's current
@@ -49,9 +55,12 @@ permissions:
 
 jobs:
   release:
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/tag-template
+    # v1.4 is the tag carrying both tag_template and module_ref. It has
+    # to exist before this is merged; see the PR.
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@v1.4
     with:
       module_path: ${{ inputs.module_path }}
+      module_ref: ${{ inputs.module_ref }}
 
       # Tagging by commit rather than version turns `skip_if_published`
       # into "skip unless this commit is new".
