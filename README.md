@@ -21,6 +21,7 @@ for anything that needs to keep working.
 | `chat_module` | [logos-chat-module](https://github.com/logos-co/logos-chat-module) | `master` |
 | `liblogos_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `liblogos_lez_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
+| `rln_membership_ui` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `lez_core` | [logos-execution-zone-module](https://github.com/logos-blockchain/logos-execution-zone-module) | `main` |
 | `openmetrics` | [openmetrics-module](https://github.com/logos-co/openmetrics-module) | `main` |
 | `logos_delivery_demo` | [logos-delivery-demo](https://github.com/logos-co/logos-delivery-demo) | `main` |
@@ -30,7 +31,7 @@ for anything that needs to keep working.
 `logos_delivery_demo` and `chat_ui` are UI modules over `delivery_module`
 and `chat_module`.
 
-Seven submodules, eight modules — `logos-rln-modules` holds two. The
+Seven submodules, nine modules — `logos-rln-modules` holds three. The
 module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
 ## Building

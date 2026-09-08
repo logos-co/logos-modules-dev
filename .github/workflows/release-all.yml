@@ -22,6 +22,7 @@ jobs:
           - submodules/logos-chat-module
           - submodules/logos-rln-modules/logos-rln-module
           - submodules/logos-rln-modules/logos-lez-rln-module
+          - submodules/logos-rln-modules/logos-rln-membership-ui
           - submodules/logos-execution-zone-module
           - submodules/openmetrics-module
           - submodules/logos-delivery-demo
