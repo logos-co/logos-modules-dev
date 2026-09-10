@@ -38,7 +38,9 @@ on:
       module_ref:
         description: |
           Branch, tag or commit sha in the module's own repository to
-          build. Blank uses the submodule pointer.
+          build. Blank builds the tip of the branch recorded for this
+          submodule in .gitmodules; the literal "pointer" builds the
+          commit the submodule pointer names.
         type: string
         default: ""
       force_build:
@@ -54,11 +56,70 @@ permissions:
   contents: write
 
 jobs:
+  # Turns a blank `module_ref` into the branch .gitmodules records for
+  # the submodule holding `module_path`, so a release picks up commits
+  # pushed since the pointer last moved. Nothing here moves the pointer.
+  resolve-ref:
+    runs-on: ubuntu-latest
+    outputs:
+      module_ref: ${{ steps.ref.outputs.module_ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - id: ref
+        shell: bash
+        env:
+          MODULE_PATH: ${{ inputs.module_path }}
+          MODULE_REF: ${{ inputs.module_ref }}
+        run: |
+          set -euo pipefail
+
+          if [ "${MODULE_REF}" = "pointer" ]; then
+            echo "::notice::building ${MODULE_PATH} at its submodule pointer"
+            echo "module_ref=" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if [ -n "${MODULE_REF}" ]; then
+            echo "module_ref=${MODULE_REF}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          # MODULE_PATH may name a directory inside a submodule
+          # (logos-rln-modules holds two modules).
+          name=""
+          while read -r key path; do
+            case "${MODULE_PATH}/" in
+              "${path}/"*)
+                name="${key#submodule.}"
+                name="${name%.path}"
+                break
+                ;;
+            esac
+          done < <(git config --file .gitmodules --get-regexp '^submodule\..*\.path$')
+
+          if [ -z "${name}" ]; then
+            echo "::error::${MODULE_PATH} is not inside a submodule declared in .gitmodules"
+            exit 1
+          fi
+
+          branch=$(git config --file .gitmodules --get "submodule.${name}.branch" || true)
+          if [ -z "${branch}" ] || [ "${branch}" = "." ]; then
+            echo "::error::submodule ${name} has no usable branch in .gitmodules"
+            exit 1
+          fi
+
+          echo "::notice::${MODULE_PATH} -> tip of ${branch}"
+          echo "module_ref=${branch}" >> "${GITHUB_OUTPUT}"
+
   release:
+    needs: resolve-ref
     uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/extra-nix-config
     with:
       module_path: ${{ inputs.module_path }}
-      module_ref: ${{ inputs.module_ref }}
+      module_ref: ${{ needs.resolve-ref.outputs.module_ref }}
       version_template: "{version}-{commits}.g{short_sha}"
 
       # Normal runs skip a version that's already fully published; "Force

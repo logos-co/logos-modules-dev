@@ -35,29 +35,34 @@ module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
 ## Building
 
-To build by hand, advance the submodules and push:
+Run **Release <module>** from the Actions tab, or **Release all
+modules** for the whole catalog, or:
+
+```bash
+./scripts/catalog.sh release-all --watch
+```
+
+Each build takes the tip of the branch `.gitmodules` records for that
+module, so a release needs no submodule bump beforehand. The submodule
+pointer is left where it is — builds leave no trace in the catalog
+beyond their release — and because a branch moves, two runs can produce
+different packages.
+
+A module whose commit hasn't moved is skipped without building, so
+re-running costs one API call per module.
+
+To build something else — a feature branch, or an older commit — fill in
+`module_ref` with a branch, tag or sha from the module's own repository.
+The literal `pointer` builds the commit the submodule pointer names.
+
+The pointers are still worth advancing now and then so the catalog
+records what it published:
 
 ```bash
 git submodule update --remote
 git commit -am "Advance submodule pointers"
 git push
 ```
-
-then run **Release all modules** from the Actions tab, or:
-
-```bash
-./scripts/catalog.sh release-all --watch
-```
-
-A module whose commit hasn't moved is skipped without building, so
-re-running costs one API call per module.
-
-To build something other than the pointer — a feature branch, or an
-older commit — run **Release <module>** and fill in `module_ref` with a
-branch, tag or sha from the module's own repository. The submodule
-pointer here is left alone, so the build leaves no trace in the catalog
-beyond its release; and because a branch moves, two runs naming the same
-branch can produce different packages.
 
 Builds also start on their own once a module repository is wired to send
 a `repository_dispatch` — `module-pushed.yml` receives it, advances that
