@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       module_ref:
-        description: "Branch, tag or commit to build. Blank = the submodule pointer."
+        description: 'Branch, tag or commit to build. Blank = tip of the branch in .gitmodules; "pointer" = the submodule pointer.'
         type: string
         default: ""
       force_build:
