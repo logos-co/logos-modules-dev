@@ -17,22 +17,13 @@ for anything that needs to keep working.
 
 ```bash
 logosctl catalog add https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
-logosctl install chat_module -y
+logosctl package show chat_module    # lists every published build
+logosctl install chat_module --version 0.2.2-98.gc6e58c47 -y
 ```
 
-`install` picks the newest version across all enabled catalogs, and a
-release outranks a dev build of the same version (`0.2.2` >
-`0.2.2-98.gc6e58c47`). For dev builds only, disable the official catalog:
-
-```bash
-logosctl catalog disable https://raw.githubusercontent.com/logos-co/logos-modules-release/refs/heads/main/logos-repo.json
-```
-
-To install a specific commit:
-
-```bash
-logosctl install chat_module --version 0.2.2-90.ga05d5119 -y
-```
+Without `--version`, `install` picks the newest version across all enabled
+catalogs, and a release outranks a dev build of the same version (`0.2.2` >
+`0.2.2-98.gc6e58c47`). Dependencies are resolved the same way.
 
 ## Modules
 
