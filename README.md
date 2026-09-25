@@ -3,7 +3,7 @@
 A Logos module catalog built from every commit on each module's default
 branch, rather than from releases.
 
-Add it to the package-manager UI / `lgpd` as:
+Add it to Basecamp's package manager or to `logosctl` as:
 
 ```
 https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
@@ -12,6 +12,41 @@ https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.jso
 Builds here are unsigned and untested. Use
 [`logos-modules-release`](https://github.com/logos-co/logos-modules-release)
 for anything that needs to keep working.
+
+## Using it with logosctl
+
+Builds here are portable, so a released
+[`logosctl`](https://github.com/logos-co/logos-logoscore-cli/releases)
+(0.3.0 or later) installs them directly.
+
+Keep dev builds in their own session, with the official catalog disabled:
+
+```bash
+export LOGOSCTL_CONFIG_DIR=~/.logosctl-dev
+logosctl daemon start --detach
+logosctl catalog add https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
+logosctl catalog disable https://raw.githubusercontent.com/logos-co/logos-modules-release/refs/heads/main/logos-repo.json
+
+logosctl search
+logosctl install chat_module -y
+logosctl module load chat_module
+```
+
+`install` takes the newest version across every enabled catalog, and a
+release `0.2.2` outranks a dev `0.2.2-98.gc6e58c47` — for the package and
+for each dependency it pulls in. `install --catalog` does not restrict
+this, and `--version` pins only the package named, so with both catalogs
+enabled you can end up with a mix of dev and release builds.
+
+Every commit is its own version. `logosctl package show chat_module`
+lists them all, and `--version` installs one, including an older one:
+
+```bash
+logosctl install chat_module --version 0.2.2-90.ga05d5119 -y
+```
+
+To move to the latest builds, run `logosctl catalog refresh`, then
+`logosctl package upgrade <module> -y`.
 
 ## Modules
 
