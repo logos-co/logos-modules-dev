@@ -3,7 +3,7 @@
 A Logos module catalog built from every commit on each module's default
 branch, rather than from releases.
 
-Add it to the package-manager UI / `lgpd` as:
+Add it to Basecamp's package manager or to `logosctl` as:
 
 ```
 https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
@@ -12,6 +12,18 @@ https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.jso
 Builds here are unsigned and untested. Use
 [`logos-modules-release`](https://github.com/logos-co/logos-modules-release)
 for anything that needs to keep working.
+
+## Using with logosctl
+
+```bash
+logosctl catalog add https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
+logosctl package show chat_module    # lists every published build
+logosctl install chat_module --version 0.2.2-98.gc6e58c47 -y
+```
+
+Without `--version`, `install` picks the newest version across all enabled
+catalogs, and a release outranks a dev build of the same version (`0.2.2` >
+`0.2.2-98.gc6e58c47`). Dependencies are resolved the same way.
 
 ## Modules
 
