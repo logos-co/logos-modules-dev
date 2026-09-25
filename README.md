@@ -25,12 +25,14 @@ for anything that needs to keep working.
 | `openmetrics` | [openmetrics-module](https://github.com/logos-co/openmetrics-module) | `main` |
 | `logos_delivery_demo` | [logos-delivery-demo](https://github.com/logos-co/logos-delivery-demo) | `main` |
 | `chat_ui` | [logos-chat-ui](https://github.com/logos-co/logos-chat-ui) | `master` |
+| `storage_module` | [logos-storage-module](https://github.com/logos-co/logos-storage-module) | `master` |
+| `blockchain_module` | [logos-blockchain-module](https://github.com/logos-blockchain/logos-blockchain-module) | `master` |
 
 `lez_core` is here as a dependency of `liblogos_lez_rln_module`.
 `logos_delivery_demo` and `chat_ui` are UI modules over `delivery_module`
 and `chat_module`.
 
-Seven submodules, eight modules — `logos-rln-modules` holds two. The
+Nine submodules, ten modules — `logos-rln-modules` holds two. The
 module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
 ## Building

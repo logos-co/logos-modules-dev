@@ -26,6 +26,8 @@ jobs:
           - submodules/openmetrics-module
           - submodules/logos-delivery-demo
           - submodules/logos-chat-ui
+          - submodules/logos-storage-module
+          - submodules/logos-blockchain-module
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}
