@@ -17,9 +17,12 @@ for anything that needs to keep working.
 
 ```bash
 logosctl catalog add https://raw.githubusercontent.com/logos-co/logos-modules-dev/main/logos-repo.json
-logosctl package show chat_module    # lists every published build
+logosctl search chat_module --catalog logos-modules-dev
 logosctl install chat_module --version 0.2.2-98.gc6e58c47 -y
 ```
+
+`search` shows the latest build; older ones are on the
+[Releases](https://github.com/logos-co/logos-modules-dev/releases) page.
 
 Without `--version`, `install` picks the newest version across all enabled
 catalogs, and a release outranks a dev build of the same version (`0.2.2` >
