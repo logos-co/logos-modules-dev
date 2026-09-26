@@ -1,9 +1,10 @@
 name: _release-module
 
 # Local reusable workflow — the single place that owns this catalog's
-# signing configuration. Every per-module workflow (release-<repo>.yml)
-# and the umbrella (release-all.yml) delegate here, so switching signing
-# modes only means editing THIS file, never the callers.
+# signing configuration and its variant list. Every per-module workflow
+# (release-<repo>.yml) and the umbrella (release-all.yml) delegate here,
+# so switching signing modes or platforms only means editing THIS file,
+# never the callers.
 #
 # The leading underscore marks it "private": it has only `workflow_call`
 # (no `workflow_dispatch`), so it never shows up as a runnable item in
@@ -18,7 +19,7 @@ name: _release-module
 #              1. Generate an Ed25519 JWK private key.
 #              2. Add it as the `LOGOS_SIGNING_KEY` Actions secret.
 #              3. Uncomment the `signing_mode: inline` line + the
-#                 `secrets:` block below; delete `signing_mode: none`.
+#                 `signing_key:` line below; delete `signing_mode: none`.
 #              4. Put the matching public DID in `logos-repo.json`
 #                 under `trustedSigners`.
 #
@@ -116,7 +117,7 @@ jobs:
 
   release:
     needs: resolve-ref
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/extra-nix-config
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/module-ref
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ needs.resolve-ref.outputs.module_ref }}
@@ -126,11 +127,22 @@ jobs:
       # build" (force_build: true) republishes it by disabling that skip.
       skip_if_published: ${{ !inputs.force_build }}
 
+      # ─── Variants (edit here, not in each caller) ───────────────────
+      # windows-x86_64 is a mingw cross build on a Linux runner. A module
+      # without `packages.x86_64-windows` fails only that leg.
+      variants: "darwin-arm64,linux-amd64,linux-arm64,windows-x86_64"
+
+      # ─── Runners and Nix cache (set by variables, not edited here) ───
+      # Unset, every job runs GitHub-hosted and only reads the Logos cache.
+      runner: ${{ vars.RELEASE_RUNNER }}
+      build_runners: ${{ vars.RELEASE_BUILD_RUNNERS }}
+      cache_environment: ${{ vars.ATTIC_ENDPOINT && 'public-cache' || '' }}
+
       # ─── Signing mode (edit here, not in each caller) ────────────────
       signing_mode: none
 
-      # Inline signing — uncomment these two lines (and the `secrets:`
-      # block at the bottom), then delete `signing_mode: none` above.
+      # Inline signing — uncomment this line (and `signing_key:` at the
+      # bottom), then delete `signing_mode: none` above.
       #signing_mode: inline
 
       # External signing (Jenkins / HSM / hardware token). Uncomment and
@@ -145,8 +157,12 @@ jobs:
       #        -o "$LGX_SIGNED_OUT" \
       #        "$JENKINS_SIGNING_URL"
 
-    # Inline mode reads this; none/external ignore it. Wired via
-    # `secrets: inherit` from each caller so the per-module files don't
-    # need to know which secret names matter. Uncomment for inline mode.
-    #secrets:
-    #  signing_key: ${{ secrets.LOGOS_SIGNING_KEY }}
+    # Reaches here via `secrets: inherit` from each caller, so the
+    # per-module files don't need to know which secret names matter.
+    secrets:
+      # Empty outside Logos-provisioned repos, leaving the cache read-only.
+      ATTIC_TOKEN_CI: ${{ secrets.ATTIC_TOKEN_CI }}
+      ATTIC_TOKEN_PUBLIC: ${{ secrets.ATTIC_TOKEN_PUBLIC }}
+      # Inline mode reads this; none/external ignore it. Uncomment for
+      # inline mode.
+      #signing_key: ${{ secrets.LOGOS_SIGNING_KEY }}

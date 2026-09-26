@@ -97,6 +97,14 @@ publish a release build of the same version here.
 Releases are never deleted, so expect the `index` rebuild to slow down as
 they accumulate — it re-downloads every published `.lgx` each run.
 
+## Platforms
+
+Every module is built for `darwin-arm64`, `linux-amd64`, `linux-arm64`
+and `windows-x86_64`, the same set as the release catalog. Windows is a
+mingw cross build on a Linux runner, so only a module whose flake
+exposes `packages.x86_64-windows` gets one; the others fail that leg and
+publish the remaining three.
+
 ## Adding a module
 
 ```bash
@@ -109,8 +117,14 @@ Then add its path to the matrix in `release-all.yml`.
 
 Same machinery, both from the
 [`logos-modules-release-base`](https://github.com/logos-co/logos-modules-release-base)
-template. The one difference is
+template. The difference is
 `version_template: "{version}-{commits}.g{short_sha}"` in
 `_release-module.yml`: every commit gets its own version, so the
 release tag is unique per commit and the action's "skip if already
 published" gate means "skip unless this commit is new".
+
+`version_template` and `module_ref` are not in a tagged release of
+[`logos-modules-release-action`](https://github.com/logos-co/logos-modules-release-action)
+yet ([#19](https://github.com/logos-co/logos-modules-release-action/pull/19),
+[#20](https://github.com/logos-co/logos-modules-release-action/pull/20)), so `_release-module.yml` pins `feat/module-ref`,
+the head of that stack.
