@@ -117,7 +117,7 @@ jobs:
 
   release:
     needs: resolve-ref
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/dev-catalog
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/module-ref
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ needs.resolve-ref.outputs.module_ref }}

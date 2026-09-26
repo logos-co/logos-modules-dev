@@ -126,5 +126,5 @@ published" gate means "skip unless this commit is new".
 `version_template` and `module_ref` are not in a tagged release of
 [`logos-modules-release-action`](https://github.com/logos-co/logos-modules-release-action)
 yet ([#19](https://github.com/logos-co/logos-modules-release-action/pull/19),
-[#20](https://github.com/logos-co/logos-modules-release-action/pull/20)), so `_release-module.yml` pins its `feat/dev-catalog`
-branch: the action's `master` plus those two inputs.
+[#20](https://github.com/logos-co/logos-modules-release-action/pull/20)), so `_release-module.yml` pins `feat/module-ref`,
+the head of that stack.
