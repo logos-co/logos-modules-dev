@@ -28,6 +28,7 @@ jobs:
           - submodules/logos-chat-ui
           - submodules/logos-storage-module
           - submodules/logos-blockchain-module
+          - submodules/logos-accounts-ui
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}
