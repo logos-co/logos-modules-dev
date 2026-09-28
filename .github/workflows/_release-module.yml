@@ -60,10 +60,12 @@ jobs:
   # Turns a blank `module_ref` into the branch .gitmodules records for
   # the submodule holding `module_path`, so a release picks up commits
   # pushed since the pointer last moved. Nothing here moves the pointer.
+  # A `module_ref` naming a vX.Y.Z tag is released as exactly X.Y.Z.
   resolve-ref:
     runs-on: ubuntu-latest
     outputs:
       module_ref: ${{ steps.ref.outputs.module_ref }}
+      version_template: ${{ steps.ref.outputs.version_template }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,19 +76,9 @@ jobs:
         env:
           MODULE_PATH: ${{ inputs.module_path }}
           MODULE_REF: ${{ inputs.module_ref }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-
-          if [ "${MODULE_REF}" = "pointer" ]; then
-            echo "::notice::building ${MODULE_PATH} at its submodule pointer"
-            echo "module_ref=" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          if [ -n "${MODULE_REF}" ]; then
-            echo "module_ref=${MODULE_REF}" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
 
           # MODULE_PATH may name a directory inside a submodule
           # (logos-rln-modules holds two modules).
@@ -106,6 +98,29 @@ jobs:
             exit 1
           fi
 
+          template="{version}-{commits}.g{short_sha}"
+          tag="${MODULE_REF#refs/tags/}"
+          if [[ "${tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+].*)?$ ]]; then
+            url=$(git config --file .gitmodules --get "submodule.${name}.url")
+            url="${url/#https:\/\/github.com\//https://x-access-token:${GH_TOKEN}@github.com/}"
+            if [ -n "$(git ls-remote --tags "${url}" "refs/tags/${tag}")" ]; then
+              template="${tag#v}"
+              echo "::notice::${tag} is a release tag -> version ${template}"
+            fi
+          fi
+          echo "version_template=${template}" >> "${GITHUB_OUTPUT}"
+
+          if [ "${MODULE_REF}" = "pointer" ]; then
+            echo "::notice::building ${MODULE_PATH} at its submodule pointer"
+            echo "module_ref=" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if [ -n "${MODULE_REF}" ]; then
+            echo "module_ref=${MODULE_REF}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
           branch=$(git config --file .gitmodules --get "submodule.${name}.branch" || true)
           if [ -z "${branch}" ] || [ "${branch}" = "." ]; then
             echo "::error::submodule ${name} has no usable branch in .gitmodules"
@@ -121,7 +136,7 @@ jobs:
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ needs.resolve-ref.outputs.module_ref }}
-      version_template: "{version}-{commits}.g{short_sha}"
+      version_template: ${{ needs.resolve-ref.outputs.version_template }}
 
       # Normal runs skip a version that's already fully published; "Force
       # build" (force_build: true) republishes it by disabling that skip.
