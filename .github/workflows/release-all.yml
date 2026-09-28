@@ -29,6 +29,7 @@ jobs:
           - submodules/logos-storage-module
           - submodules/logos-blockchain-module
           - submodules/logos-accounts-ui
+          - submodules/logos-libp2p-module
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}
