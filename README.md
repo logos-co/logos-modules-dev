@@ -123,7 +123,10 @@ template. The difference is
 `version_template: "{version}-{commits}.g{short_sha}"` in
 `_release-module.yml`: every commit gets its own version, so the
 release tag is unique per commit and the action's "skip if already
-published" gate means "skip unless this commit is new".
+published" gate means "skip unless this commit is new". The exception
+is a `module_ref` naming a `vX.Y.Z` tag in the module's repository: it
+is released as exactly `X.Y.Z` (`v0.3.0-rc.3` → `0.3.0-rc.3`), whatever
+`metadata.json` says at that tag.
 
 `version_template` and `module_ref` are not in a tagged release of
 [`logos-modules-release-action`](https://github.com/logos-co/logos-modules-release-action)
