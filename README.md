@@ -35,7 +35,7 @@ catalogs, and a release outranks a dev build of the same version (`0.2.2` >
 | `liblogos_lez_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `lez_core` | [logos-execution-zone-module](https://github.com/logos-blockchain/logos-execution-zone-module) | `main` |
 | `openmetrics` | [openmetrics-module](https://github.com/logos-co/openmetrics-module) | `main` |
-| `logos_delivery_demo` | [logos-delivery-demo](https://github.com/logos-co/logos-delivery-demo) | `main` |
+| `delivery_demo` | [logos-delivery-demo](https://github.com/logos-co/logos-delivery-demo) | `main` |
 | `chat_ui` | [logos-chat-ui](https://github.com/logos-co/logos-chat-ui) | `master` |
 | `storage_module` | [logos-storage-module](https://github.com/logos-co/logos-storage-module) | `master` |
 | `blockchain_module` | [logos-blockchain-module](https://github.com/logos-blockchain/logos-blockchain-module) | `master` |
@@ -43,7 +43,7 @@ catalogs, and a release outranks a dev build of the same version (`0.2.2` >
 | `libp2p_module` | [logos-libp2p-module](https://github.com/logos-co/logos-libp2p-module) | `master` |
 
 `lez_core` is here as a dependency of `liblogos_lez_rln_module`.
-`logos_delivery_demo` and `chat_ui` are UI modules over `delivery_module`
+`delivery_demo` and `chat_ui` are UI modules over `delivery_module`
 and `chat_module`.
 
 Eleven submodules, twelve modules — `logos-rln-modules` holds two. The
