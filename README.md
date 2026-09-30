@@ -107,10 +107,6 @@ mingw cross build on a Linux runner, so only a module whose flake
 exposes `packages.x86_64-windows` gets one; the others fail that leg and
 publish the remaining three.
 
-`libp2p_module` doesn't expose one, so it is built without Windows: its
-workflow and its `release-all.yml` matrix entry pass `variants` without
-`windows-x86_64`.
-
 ## Adding a module
 
 ```bash

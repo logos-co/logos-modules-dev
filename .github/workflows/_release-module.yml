@@ -50,12 +50,6 @@ on:
           commit instead of skipping it.
         type: boolean
         default: false
-      variants:
-        description: |
-          Comma-separated variants to build. Blank builds the catalog's
-          full list below.
-        type: string
-        default: ""
 
 # Forked repos default to a read-only GITHUB_TOKEN; the downstream
 # release job needs to create releases / upload assets.
@@ -150,9 +144,8 @@ jobs:
 
       # ─── Variants (edit here, not in each caller) ───────────────────
       # windows-x86_64 is a mingw cross build on a Linux runner. A module
-      # without `packages.x86_64-windows` fails only that leg, unless its
-      # caller passes `variants` without it.
-      variants: ${{ inputs.variants || 'darwin-arm64,linux-amd64,linux-arm64,windows-x86_64' }}
+      # without `packages.x86_64-windows` fails only that leg.
+      variants: "darwin-arm64,linux-amd64,linux-arm64,windows-x86_64"
 
       # ─── Runners and Nix cache (set by variables, not edited here) ───
       # Unset, every job runs GitHub-hosted and only reads the Logos cache.
