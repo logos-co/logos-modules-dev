@@ -25,5 +25,4 @@ jobs:
       module_path: submodules/logos-libp2p-module
       module_ref: ${{ inputs.module_ref }}
       force_build: ${{ inputs.force_build }}
-      variants: "darwin-arm64,linux-amd64,linux-arm64"
     secrets: inherit
