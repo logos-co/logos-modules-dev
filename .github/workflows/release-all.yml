@@ -30,8 +30,12 @@ jobs:
           - submodules/logos-blockchain-module
           - submodules/logos-accounts-ui
           - submodules/logos-libp2p-module
+        include:
+          - module_path: submodules/logos-libp2p-module
+            variants: "darwin-arm64,linux-amd64,linux-arm64"
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}
       force_build: ${{ inputs.force_build }}
+      variants: ${{ matrix.variants }}
     secrets: inherit
