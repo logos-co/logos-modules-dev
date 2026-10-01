@@ -132,7 +132,15 @@ jobs:
 
   release:
     needs: resolve-ref
-    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@feat/module-ref
+    # Pinned to the v1 tag, not a branch.
+    #
+    # This call previously used `@feat/module-ref`, a feature branch of the
+    # release action. A branch reference is mutable: anyone able to push to
+    # that branch could change the code this job executes, and that job holds
+    # `contents: write` and the signing secrets (`secrets: inherit` is used by
+    # the callers). Pinning to the released tag makes the executed code
+    # auditable and reviewable.
+    uses: logos-co/logos-modules-release-action/.github/workflows/release.yml@v1
     with:
       module_path: ${{ inputs.module_path }}
       module_ref: ${{ needs.resolve-ref.outputs.module_ref }}
