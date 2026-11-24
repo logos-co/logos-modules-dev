@@ -1,10 +1,9 @@
 name: _release-module
 
-# Local reusable workflow — the single place that owns this catalog's
-# signing configuration and its variant list. Every per-module workflow
-# (release-<repo>.yml) and the umbrella (release-all.yml) delegate here,
-# so switching signing modes or platforms only means editing THIS file,
-# never the callers.
+# Local reusable workflow for the catalog's signing configuration and
+# default variants. Per-module workflows (release-<repo>.yml) and the
+# umbrella workflow (release-all.yml) delegate here. Callers can override
+# the variant list for their release.
 #
 # The leading underscore marks it "private": it has only `workflow_call`
 # (no `workflow_dispatch`), so it never shows up as a runnable item in
@@ -50,6 +49,10 @@ on:
           commit instead of skipping it.
         type: boolean
         default: false
+      variants:
+        description: "Comma-separated build variants. Omit to use the catalog defaults."
+        type: string
+        default: "darwin-arm64,linux-amd64,linux-arm64,windows-x86_64"
 
 # Forked repos default to a read-only GITHUB_TOKEN; the downstream
 # release job needs to create releases / upload assets.
@@ -142,10 +145,9 @@ jobs:
       # build" (force_build: true) republishes it by disabling that skip.
       skip_if_published: ${{ !inputs.force_build }}
 
-      # ─── Variants (edit here, not in each caller) ───────────────────
       # windows-x86_64 is a mingw cross build on a Linux runner. A module
       # without `packages.x86_64-windows` fails only that leg.
-      variants: "darwin-arm64,linux-amd64,linux-arm64,windows-x86_64"
+      variants: ${{ inputs.variants }}
 
       # ─── Runners and Nix cache (set by variables, not edited here) ───
       # Unset, every job runs GitHub-hosted and only reads the Logos cache.
