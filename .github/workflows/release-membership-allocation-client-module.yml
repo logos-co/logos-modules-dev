@@ -1,4 +1,4 @@
-name: Release liblogos_lez_rln_module
+name: Release membership_allocation_client_module
 
 # Generated from release-module.yml.template by scripts/add-module.sh.
 
@@ -22,7 +22,7 @@ jobs:
   release:
     uses: ./.github/workflows/_release-module.yml
     with:
-      module_path: submodules/logos-rln-modules/logos-lez-rln-module
+      module_path: submodules/logos-membership-allocation-client-module
       module_ref: ${{ inputs.module_ref }}
       force_build: ${{ inputs.force_build }}
     secrets: inherit

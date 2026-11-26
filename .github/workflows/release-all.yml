@@ -16,12 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Not derivable from .gitmodules: logos-rln-modules holds two modules.
         module_path:
           - submodules/logos-delivery-module
           - submodules/logos-chat-module
-          - submodules/logos-rln-modules/logos-rln-module
-          - submodules/logos-rln-modules/logos-lez-rln-module
           - submodules/logos-execution-zone-module
           - submodules/openmetrics-module
           - submodules/logos-delivery-demo
@@ -30,6 +27,10 @@ jobs:
           - submodules/logos-blockchain-module
           - submodules/logos-accounts-ui
           - submodules/logos-libp2p-module
+          - submodules/logos-rln-module
+          - submodules/logos-rln-lez-module
+          - submodules/logos-membership-allocation-client-module
+          - submodules/logos-membership-allocation-module
     uses: ./.github/workflows/_release-module.yml
     with:
       module_path: ${{ matrix.module_path }}
