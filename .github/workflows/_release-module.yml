@@ -83,8 +83,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          # MODULE_PATH may name a directory inside a submodule
-          # (logos-rln-modules holds two modules).
+          # MODULE_PATH may name a directory inside a submodule.
           name=""
           while read -r key path; do
             case "${MODULE_PATH}/" in

@@ -1,4 +1,4 @@
-name: Release liblogos_rln_module
+name: Release rln_lez_module
 
 # Generated from release-module.yml.template by scripts/add-module.sh.
 
@@ -22,7 +22,7 @@ jobs:
   release:
     uses: ./.github/workflows/_release-module.yml
     with:
-      module_path: submodules/logos-rln-modules/logos-rln-module
+      module_path: submodules/logos-rln-lez-module
       module_ref: ${{ inputs.module_ref }}
       force_build: ${{ inputs.force_build }}
     secrets: inherit

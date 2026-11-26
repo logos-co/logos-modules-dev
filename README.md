@@ -31,8 +31,6 @@ catalogs, and a release outranks a dev build of the same version (`0.2.2` >
 |---|---|---|
 | `delivery_module` | [logos-delivery-module](https://github.com/logos-co/logos-delivery-module) | `master` |
 | `chat_module` | [logos-chat-module](https://github.com/logos-co/logos-chat-module) | `master` |
-| `liblogos_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
-| `liblogos_lez_rln_module` | [logos-rln-modules](https://github.com/logos-co/logos-rln-modules) | `main` |
 | `lez_core` | [logos-execution-zone-module](https://github.com/logos-blockchain/logos-execution-zone-module) | `main` |
 | `openmetrics` | [openmetrics-module](https://github.com/logos-co/openmetrics-module) | `main` |
 | `delivery_demo` | [logos-delivery-demo](https://github.com/logos-co/logos-delivery-demo) | `main` |
@@ -41,13 +39,15 @@ catalogs, and a release outranks a dev build of the same version (`0.2.2` >
 | `blockchain_module` | [logos-blockchain-module](https://github.com/logos-blockchain/logos-blockchain-module) | `master` |
 | `accountlog_ui` | [logos-accounts-ui](https://github.com/logos-co/logos-accounts-ui) | `main` |
 | `libp2p_module` | [logos-libp2p-module](https://github.com/logos-co/logos-libp2p-module) | `master` |
+| `rln_module` | [logos-rln-module](https://github.com/logos-co/logos-rln-module) | `main` |
+| `rln_lez_module` | [logos-rln-lez-module](https://github.com/logos-co/logos-rln-lez-module) | `main` |
+| `membership_allocation_client_module` | [logos-membership-allocation-client-module](https://github.com/logos-co/logos-membership-allocation-client-module) | `main` |
+| `membership_allocation_module` | [logos-membership-allocation-module](https://github.com/logos-co/logos-membership-allocation-module) | `main` |
 
-`lez_core` is here as a dependency of `liblogos_lez_rln_module`.
 `delivery_demo` and `chat_ui` are UI modules over `delivery_module`
 and `chat_module`.
 
-Eleven submodules, twelve modules — `logos-rln-modules` holds two. The
-module list is the matrix in `release-all.yml`, not `.gitmodules`.
+The module list is the matrix in `release-all.yml`, not `.gitmodules`.
 
 ## Building
 

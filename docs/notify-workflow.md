@@ -14,7 +14,7 @@ name: Notify logos-modules-dev
 
 on:
   push:
-    branches: [master]      # main, for logos-rln-modules and logos-execution-zone-module
+    branches: [master]      # main, for logos-execution-zone-module
 
 permissions: {}
 
@@ -42,7 +42,7 @@ write** on this repository. A GitHub App installation scoped to
 `logos-modules-dev` is the right shape; a classic PAT on a personal
 account grants far more than this needs.
 
-The same secret goes in all four repositories, so rotating it is four
+The same secret goes in all three repositories, so rotating it is three
 updates.
 
 ## Repositories to add it to
@@ -51,7 +51,6 @@ updates.
 |---|---|
 | `logos-co/logos-delivery-module` | `master` |
 | `logos-co/logos-chat-module` | `master` |
-| `logos-co/logos-rln-modules` | `main` |
 | `logos-blockchain/logos-execution-zone-module` | `main` |
 
 `logos-execution-zone-module` is in a different organisation, so the
