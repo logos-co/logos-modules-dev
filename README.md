@@ -107,6 +107,25 @@ mingw cross build on a Linux runner, so only a module whose flake
 exposes `packages.x86_64-windows` gets one; the others fail that leg and
 publish the remaining three.
 
+To build a module for fewer platforms every time, give it a `variants`
+line in `.gitmodules`; it applies to its own workflow, **Release all
+modules** and `module-pushed.yml` alike:
+
+```ini
+[submodule "submodules/logos-storage-module"]
+	path = submodules/logos-storage-module
+	url = https://github.com/logos-co/logos-storage-module
+	branch = master
+	variants = darwin-arm64,linux-amd64,linux-arm64
+```
+
+To change it for one run, fill in `variants` when running **Release
+<module>**, or pass it on the command line:
+
+```bash
+gh workflow run release-rln-module.yml -f variants=darwin-arm64,linux-amd64,linux-arm64
+```
+
 ## Adding a module
 
 ```bash

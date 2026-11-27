@@ -13,6 +13,10 @@ on:
         description: "Force build — replace the release for the module's current commit."
         type: boolean
         default: false
+      variants:
+        description: 'Comma-separated variants to build, e.g. "darwin-arm64,linux-amd64,linux-arm64". Blank = the module''s variants in .gitmodules, else all.'
+        type: string
+        default: ""
 
 # Forked repos default to a read-only GITHUB_TOKEN.
 permissions:
@@ -25,4 +29,5 @@ jobs:
       module_path: submodules/logos-rln-lez-module
       module_ref: ${{ inputs.module_ref }}
       force_build: ${{ inputs.force_build }}
+      variants: ${{ inputs.variants }}
     secrets: inherit
