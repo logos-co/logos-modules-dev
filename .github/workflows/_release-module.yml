@@ -50,9 +50,11 @@ on:
         type: boolean
         default: false
       variants:
-        description: "Comma-separated build variants. Omit to use the catalog defaults."
+        description: |
+          Comma-separated build variants. Blank uses the submodule's
+          `variants` in .gitmodules, else every variant the catalog builds.
         type: string
-        default: "darwin-arm64,linux-amd64,linux-arm64,windows-x86_64"
+        default: ""
 
 # Forked repos default to a read-only GITHUB_TOKEN; the downstream
 # release job needs to create releases / upload assets.
@@ -69,6 +71,7 @@ jobs:
     outputs:
       module_ref: ${{ steps.ref.outputs.module_ref }}
       version_template: ${{ steps.ref.outputs.version_template }}
+      variants: ${{ steps.ref.outputs.variants }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,6 +82,7 @@ jobs:
         env:
           MODULE_PATH: ${{ inputs.module_path }}
           MODULE_REF: ${{ inputs.module_ref }}
+          VARIANTS: ${{ inputs.variants }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -99,6 +103,22 @@ jobs:
             echo "::error::${MODULE_PATH} is not inside a submodule declared in .gitmodules"
             exit 1
           fi
+
+          variants="${VARIANTS// /}"
+          if [ -z "${variants}" ]; then
+            variants=$(git config --file .gitmodules --get "submodule.${name}.variants" || true)
+            variants="${variants// /}"
+          fi
+          variants="${variants:-darwin-arm64,linux-amd64,linux-arm64,windows-x86_64}"
+          IFS=',' read -ra wanted <<< "${variants}"
+          for v in "${wanted[@]}"; do
+            case "${v}" in
+              darwin-arm64|linux-amd64|linux-arm64|windows-x86_64) ;;
+              *) echo "::error::unknown variant '${v}' in '${variants}'"; exit 1 ;;
+            esac
+          done
+          echo "::notice::building ${name} for ${variants}"
+          echo "variants=${variants}" >> "${GITHUB_OUTPUT}"
 
           template="{version}-{commits}.g{short_sha}"
           tag="${MODULE_REF#refs/tags/}"
@@ -146,7 +166,7 @@ jobs:
 
       # windows-x86_64 is a mingw cross build on a Linux runner. A module
       # without `packages.x86_64-windows` fails only that leg.
-      variants: ${{ inputs.variants }}
+      variants: ${{ needs.resolve-ref.outputs.variants }}
 
       # ─── Runners and Nix cache (set by variables, not edited here) ───
       # Unset, every job runs GitHub-hosted and only reads the Logos cache.

@@ -29,6 +29,7 @@
 	path = submodules/logos-storage-module
 	url = https://github.com/logos-co/logos-storage-module
 	branch = master
+	variants = darwin-arm64,linux-amd64,linux-arm64
 [submodule "submodules/logos-blockchain-module"]
 	path = submodules/logos-blockchain-module
 	url = https://github.com/logos-blockchain/logos-blockchain-module
@@ -49,10 +50,12 @@
 	path = submodules/logos-rln-lez-module
 	url = https://github.com/logos-co/logos-rln-lez-module
 	branch = main
+	variants = darwin-arm64,linux-amd64,linux-arm64
 [submodule "submodules/logos-membership-allocation-client-module"]
 	path = submodules/logos-membership-allocation-client-module
 	url = https://github.com/logos-co/logos-membership-allocation-client-module
 	branch = main
+	variants = darwin-arm64,linux-amd64,linux-arm64
 [submodule "submodules/logos-membership-allocation-module"]
 	path = submodules/logos-membership-allocation-module
 	url = https://github.com/logos-co/logos-membership-allocation-module
